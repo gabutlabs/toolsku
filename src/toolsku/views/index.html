@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f2f5f1">
+    <title>Compress a PDF | Toolsku</title>
+    <link rel="stylesheet" href="{{ request.url_for('assets', path='/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ request.url_for('assets', path='/css/app.css') }}">
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to PDF compression</a>
+    <div class="page-shell">
+      <header class="brand-bar" aria-label="Toolsku">
+        <a class="brand-link" href="/" aria-label="Toolsku PDF compression home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6.75 3.75h7.1l4.4 4.4v11.1a1 1 0 0 1-1 1h-10.5a1 1 0 0 1-1-1v-14.5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              <path d="M13.5 4v4.5H18M8.5 12h6.8M8.5 15.5h6.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="brand-name">toolsku</span>
+        </a>
+        <span class="brand-product">PDF compression</span>
+      </header>
+
+      <main id="main-content" class="content-wrap">
+        <section class="intro" aria-labelledby="page-title">
+          <p class="eyebrow">A smaller file, ready to share</p>
+          <h1 id="page-title">Make your PDF smaller.</h1>
+          <p class="intro-copy">Choose a size target. We’ll compress your file and show you the result before you download it.</p>
+        </section>
+
+        <section class="compression-card" aria-label="PDF compression form">
+          <form id="compression-form" novalidate>
+            <div class="section-heading">
+              <span class="step-number" aria-hidden="true">1</span>
+              <div>
+                <h2>Choose a PDF</h2>
+                <p>Select one file from your device.</p>
+              </div>
+            </div>
+
+            <div class="upload-area" id="upload-area">
+              <input id="pdf-file" class="visually-hidden upload-input" type="file" name="file" accept=".pdf,application/pdf" aria-label="Choose a PDF file" aria-describedby="upload-help file-error">
+              <label class="upload-zone" for="pdf-file" id="upload-zone">
+                <span class="upload-icon" aria-hidden="true">
+                  <svg viewBox="0 0 32 32" fill="none">
+                    <path d="M9 5.5h9l5.5 5.5v14a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 7.5 25v-18A1.5 1.5 0 0 1 9 5.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                    <path d="M18 6v5h5M16 22v-7m0 0-3 3m3-3 3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span class="upload-copy">
+                  <span class="upload-title">Drop your PDF here</span>
+                  <span class="upload-subtitle">or browse files on your device</span>
+                </span>
+                <span class="btn btn-outline-secondary upload-button">Choose PDF</span>
+              </label>
+              <p class="upload-help" id="upload-help">PDF files up to 50 MB</p>
+              <p class="field-error" id="file-error" hidden></p>
+            </div>
+
+            <div class="selected-file" id="selected-file" hidden>
+              <span class="selected-file-icon" aria-hidden="true">PDF</span>
+              <span class="selected-file-copy">
+                <span class="selected-file-name" id="selected-file-name"></span>
+                <span class="selected-file-size" id="selected-file-size"></span>
+              </span>
+              <button class="btn btn-sm btn-light remove-file" type="button" id="remove-file" aria-label="Remove selected PDF">Remove</button>
+            </div>
+
+            <div class="section-heading target-heading">
+              <span class="step-number" aria-hidden="true">2</span>
+              <div>
+                <h2>Choose a compression option</h2>
+                <p>Set a size goal or use the recommended setting.</p>
+              </div>
+            </div>
+
+            <fieldset class="target-grid" aria-label="Compression size target">
+              <legend class="visually-hidden">Compression size target</legend>
+              <div class="target-card is-selected">
+                <input class="btn-check" type="radio" name="size_option" id="target-recommended" value="recommended" checked>
+                <label class="target-option" for="target-recommended">
+                  <span class="target-title">Recommended</span>
+                  <span class="target-description">Balanced quality, no size target</span>
+                </label>
+              </div>
+              <div class="target-card">
+                <input class="btn-check" type="radio" name="size_option" id="target-one-mb" value="1">
+                <label class="target-option" for="target-one-mb">
+                  <span class="target-title">1 MB</span>
+                  <span class="target-description">Aim for 1 MB or less</span>
+                </label>
+              </div>
+              <div class="target-card">
+                <input class="btn-check" type="radio" name="size_option" id="target-two-mb" value="2">
+                <label class="target-option" for="target-two-mb">
+                  <span class="target-title">2 MB</span>
+                  <span class="target-description">Aim for 2 MB or less</span>
+                </label>
+              </div>
+              <div class="target-card target-card-custom">
+                <input class="btn-check" type="radio" name="size_option" id="target-custom" value="custom">
+                <label class="target-option" for="target-custom">
+                  <span class="target-title">Custom</span>
+                  <span class="target-description">Set a whole-number target</span>
+                </label>
+                <div class="custom-size-field">
+                  <label class="form-label" for="custom-size-mb">Target size</label>
+                  <div class="input-group">
+                    <input class="form-control" type="text" id="custom-size-mb" name="custom_size_mb" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="3" aria-describedby="custom-size-hint custom-size-error" disabled>
+                    <span class="input-group-text">MB</span>
+                  </div>
+                  <span class="form-text" id="custom-size-hint">Whole numbers only</span>
+                  <span class="field-error" id="custom-size-error" hidden></span>
+                </div>
+              </div>
+            </fieldset>
+
+            <button class="btn btn-primary compress-button" type="submit" id="compress-button">
+              Compress PDF
+            </button>
+            <p class="target-note">For 1 MB, 2 MB, and custom targets, we’ll only offer a download if the PDF meets the selected size. Some PDFs can’t be compressed that far.</p>
+          </form>
+
+          <section class="job-panel" id="job-panel" aria-live="polite" hidden>
+            <div class="status-heading">
+              <span class="status-icon status-icon-loading" id="status-icon" aria-hidden="true">
+                <span class="spinner-border spinner-border-sm"></span>
+                <span class="status-mark status-mark-complete" hidden>✓</span>
+                <span class="status-mark status-mark-failed" hidden>!</span>
+              </span>
+              <div>
+                <h2 id="status-title">Waiting in the queue</h2>
+                <p id="status-description">We’ll start as soon as a worker is available.</p>
+              </div>
+            </div>
+            <div class="progress progress-indeterminate" id="progress-indicator" aria-hidden="true">
+              <div class="progress-bar progress-bar-striped progress-bar-animated"></div>
+            </div>
+            <div class="result-panel" id="result-panel" hidden>
+              <div class="result-heading">
+                <span class="result-check" aria-hidden="true">✓</span>
+                <div>
+                  <h2>Compressed PDF ready</h2>
+                  <p id="result-message"></p>
+                </div>
+              </div>
+              <div class="size-comparison" aria-label="File size comparison">
+                <div class="size-stat">
+                  <span>Original</span>
+                  <strong id="original-size"></strong>
+                </div>
+                <span class="comparison-divider" aria-hidden="true"></span>
+                <div class="size-stat">
+                  <span>Compressed</span>
+                  <strong id="compressed-size"></strong>
+                </div>
+                <div class="saved-stat" id="saved-stat" hidden>
+                  <span id="saved-size"></span>
+                </div>
+              </div>
+              <div class="d-grid gap-2 d-sm-flex result-actions">
+                <a class="btn btn-primary download-button" id="download-button" href="#">Download compressed PDF</a>
+                <button class="btn btn-outline-secondary another-button" type="button" id="another-button">Compress another PDF</button>
+              </div>
+            </div>
+            <div class="error-panel" id="error-panel" role="alert" hidden>
+              <p class="error-title" id="error-title">We couldn’t compress this PDF.</p>
+              <p id="error-message"></p>
+              <button class="btn btn-outline-secondary another-button" type="button" id="retry-button">Choose another PDF</button>
+            </div>
+          </section>
+        </section>
+
+        <p class="privacy-note">Your files are stored temporarily and cleared when this app stops.</p>
+      </main>
+      <footer class="page-footer">A simple PDF tool from Toolsku</footer>
+    </div>
+    <script src="{{ request.url_for('assets', path='/js/app.js') }}" defer></script>
+  </body>
+</html>
