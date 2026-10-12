@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f2f5f1">
+    <title>File tools | Toolsku</title>
+    <link rel="stylesheet" href="{{ request.url_for('assets', path='/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ request.url_for('assets', path='/css/app.css') }}">
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to file tools</a>
+    <div class="page-shell">
+      <header class="brand-bar" aria-label="Toolsku">
+        <a class="brand-link" href="/" aria-label="Toolsku home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6.75 3.75h7.1l4.4 4.4v11.1a1 1 0 0 1-1 1h-10.5a1 1 0 0 1-1-1v-14.5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              <path d="M13.5 4v4.5H18M8.5 12h6.8M8.5 15.5h6.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="brand-name">toolsku</span>
+        </a>
+        <span class="brand-product">File tools</span>
+      </header>
+
+      <main id="main-content" class="content-wrap tools-home">
+        <section class="intro" aria-labelledby="page-title">
+          <p class="eyebrow">Tools for everyday files</p>
+          <h1 id="page-title">What do you need to compress?</h1>
+          <p class="intro-copy">Choose a file type to get started.</p>
+        </section>
+
+        <nav class="tool-list" aria-label="Compression tools">
+          <a class="tool-choice" href="/pdf">
+            <span class="tool-choice-icon" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none">
+                <path d="M9 4.5h9l5.5 5.5v16a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 7.5 26v-20A1.5 1.5 0 0 1 9 4.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                <path d="M18 5v5h5M11 17h10M11 21h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M11 13.5h3.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span class="tool-choice-copy">
+              <span class="tool-choice-title">Compress a PDF</span>
+              <span class="tool-choice-description">Reduce a PDF file or aim for a specific size.</span>
+            </span>
+            <span class="tool-choice-action">Choose PDF</span>
+          </a>
+
+          <a class="tool-choice" href="/images">
+            <span class="tool-choice-icon tool-choice-icon-image" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none">
+                <rect x="4.5" y="6" width="23" height="20" rx="2" stroke="currentColor" stroke-width="1.7"/>
+                <circle cx="12" cy="13" r="2.2" stroke="currentColor" stroke-width="1.7"/>
+                <path d="m6.5 23 6.2-6 4.1 3.6 3.2-3 5.5 5.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="tool-choice-copy">
+              <span class="tool-choice-title">Compress an image</span>
+              <span class="tool-choice-description">Make a JPG, PNG, or WebP smaller while keeping it clear.</span>
+            </span>
+            <span class="tool-choice-action">Choose image</span>
+          </a>
+        </nav>
+      </main>
+      <footer class="page-footer">A simple set of file tools from Toolsku</footer>
+    </div>
+  </body>
+</html>

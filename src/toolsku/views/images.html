@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f2f5f1">
+    <title>Compress an image | Toolsku</title>
+    <link rel="stylesheet" href="{{ request.url_for('assets', path='/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ request.url_for('assets', path='/css/app.css') }}">
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to image compression</a>
+    <div class="page-shell">
+      <header class="brand-bar" aria-label="Toolsku">
+        <a class="brand-link" href="/" aria-label="Toolsku home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6.75 3.75h7.1l4.4 4.4v11.1a1 1 0 0 1-1 1h-10.5a1 1 0 0 1-1-1v-14.5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              <path d="M13.5 4v4.5H18M8.5 12h6.8M8.5 15.5h6.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="brand-name">toolsku</span>
+        </a>
+        <a class="brand-product tools-link" href="/">All tools</a>
+      </header>
+
+      <main id="main-content" class="content-wrap">
+        <section class="intro" aria-labelledby="page-title">
+          <p class="eyebrow">A smaller image, ready to share</p>
+          <h1 id="page-title">Make your image smaller.</h1>
+          <p class="intro-copy">Choose an image, pick an output format, then set how small it should be.</p>
+        </section>
+
+        <section class="compression-card" aria-label="Image compression form">
+          <form id="image-compression-form" novalidate>
+            <div class="section-heading">
+              <span class="step-number" aria-hidden="true">1</span>
+              <div>
+                <h2>Choose an image</h2>
+                <p>Select one JPG, PNG, or WebP file.</p>
+              </div>
+            </div>
+
+            <div class="upload-area" id="image-upload-area">
+              <input id="image-file" class="visually-hidden upload-input" type="file" name="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" aria-label="Choose an image file" aria-describedby="image-upload-help image-file-error">
+              <label class="upload-zone" for="image-file" id="image-upload-zone">
+                <span class="upload-icon" aria-hidden="true">
+                  <svg viewBox="0 0 32 32" fill="none">
+                    <rect x="4.5" y="6" width="23" height="20" rx="2" stroke="currentColor" stroke-width="1.7"/>
+                    <circle cx="12" cy="13" r="2.2" stroke="currentColor" stroke-width="1.7"/>
+                    <path d="m6.5 23 6.2-6 4.1 3.6 3.2-3 5.5 5.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span class="upload-copy">
+                  <span class="upload-title">Drop an image here</span>
+                  <span class="upload-subtitle">or browse files on your device</span>
+                </span>
+                <span class="btn btn-outline-secondary upload-button">Choose image</span>
+              </label>
+              <p class="upload-help" id="image-upload-help">Static JPG, PNG, or WebP, up to 50 MB and 40 megapixels.</p>
+              <p class="field-error" id="image-file-error" hidden></p>
+            </div>
+
+            <div class="selected-file image-selected-file" id="image-selected-file" hidden>
+              <span class="selected-file-icon image-file-icon" aria-hidden="true">IMG</span>
+              <span class="selected-file-copy">
+                <span class="selected-file-name" id="image-file-name"></span>
+                <span class="selected-file-size" id="image-file-details"></span>
+              </span>
+              <button class="btn btn-sm btn-light remove-file" type="button" id="remove-image" aria-label="Remove selected image">Remove</button>
+            </div>
+
+            <div class="section-heading target-heading">
+              <span class="step-number" aria-hidden="true">2</span>
+              <div>
+                <h2>Choose an output format</h2>
+                <p>Keep the uploaded format or convert the image.</p>
+              </div>
+            </div>
+            <div class="image-format-field">
+              <label class="form-label" for="image-output-format">Output format</label>
+              <select class="form-select" id="image-output-format" name="output_format" aria-describedby="image-format-help">
+                <option value="source" selected>Same as uploaded image</option>
+                <option value="jpeg">JPEG</option>
+                <option value="png">PNG</option>
+                <option value="webp">WebP</option>
+              </select>
+              <p class="form-text" id="image-format-help">Same as uploaded uses the format detected in your image.</p>
+            </div>
+
+            <div class="section-heading target-heading">
+              <span class="step-number" aria-hidden="true">3</span>
+              <div>
+                <h2>Choose a compression option</h2>
+                <p>Start with a balanced setting or set a size limit.</p>
+              </div>
+            </div>
+
+            <fieldset class="target-grid image-target-grid" aria-label="Image compression option">
+              <legend class="visually-hidden">Image compression option</legend>
+              <div class="target-card is-selected">
+                <input class="btn-check" type="radio" name="size_option" id="image-recommended" value="recommended" checked>
+                <label class="target-option" for="image-recommended">
+                  <span class="target-title">Recommended</span>
+                  <span class="target-description">Format-aware compression, no size limit</span>
+                </label>
+              </div>
+              <div class="target-card target-card-custom">
+                <input class="btn-check" type="radio" name="size_option" id="image-custom" value="custom">
+                <label class="target-option" for="image-custom">
+                  <span class="target-title">Maximum size</span>
+                  <span class="target-description">Set a limit for the compressed file</span>
+                </label>
+                <div class="custom-size-field">
+                  <label class="form-label" for="image-size-kb">Maximum file size</label>
+                  <div class="input-group">
+                    <input class="form-control" type="text" id="image-size-kb" name="custom_size_kb" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="500" aria-describedby="image-size-hint image-size-preview image-size-error" disabled>
+                    <span class="input-group-text">KB</span>
+                  </div>
+                  <span class="form-text" id="image-size-hint">Enter a limit from 10 to 50,000 KB. The output can be smaller.</span>
+                  <span class="form-text size-preview" id="image-size-preview" aria-live="polite" hidden></span>
+                  <span class="form-text size-examples-label">Try an example:</span>
+                  <div class="size-examples" role="group" aria-label="Example maximum file sizes">
+                    <button class="size-example" type="button" data-size-kb="200" disabled>200 KB <span>small web image</span></button>
+                    <button class="size-example" type="button" data-size-kb="500" disabled>500 KB <span>email image</span></button>
+                    <button class="size-example" type="button" data-size-kb="1000" disabled>1 MB <span>larger photo</span></button>
+                  </div>
+                  <span class="form-text size-example-note">1 MB = 1,000 KB. A lower limit may reduce detail.</span>
+                  <span class="field-error" id="image-size-error" hidden></span>
+                </div>
+              </div>
+            </fieldset>
+
+            <button class="btn btn-primary compress-button" type="submit" id="image-compress-button">Compress image</button>
+            <p class="target-note">JPEG and WebP can lose detail during compression. PNG stays lossless. A size limit may lower JPEG or WebP quality. Transparency, if present, is filled with white in JPEG. EXIF may include location information.</p>
+          </form>
+
+          <section class="job-panel" id="image-job-panel" aria-live="polite" hidden>
+            <div class="status-heading">
+              <span class="status-icon status-icon-loading" id="image-status-icon" aria-hidden="true">
+                <span class="spinner-border spinner-border-sm"></span>
+                <span class="status-mark status-mark-complete" hidden>✓</span>
+                <span class="status-mark status-mark-failed" hidden>!</span>
+              </span>
+              <div>
+                <h2 id="image-status-title">Waiting in the queue</h2>
+                <p id="image-status-description">We’ll start as soon as a worker is available.</p>
+              </div>
+            </div>
+            <div class="progress progress-indeterminate" id="image-progress-indicator" aria-hidden="true">
+              <div class="progress-bar progress-bar-striped progress-bar-animated"></div>
+            </div>
+            <div class="result-panel" id="image-result-panel" hidden>
+              <div class="result-heading">
+                <span class="result-check" aria-hidden="true">✓</span>
+                <div>
+                  <h2>Compressed image ready</h2>
+                  <p id="image-result-message"></p>
+                </div>
+              </div>
+              <div class="size-comparison" aria-label="Image file size comparison">
+                <div class="size-stat">
+                  <span>Original</span>
+                  <strong id="image-original-size"></strong>
+                </div>
+                <span class="comparison-divider" aria-hidden="true"></span>
+                <div class="size-stat">
+                  <span>Compressed</span>
+                  <strong id="image-compressed-size"></strong>
+                </div>
+                <div class="saved-stat" id="image-saved-stat" hidden>
+                  <span id="image-saved-size"></span>
+                </div>
+              </div>
+              <div class="d-grid gap-2 d-sm-flex result-actions">
+                <a class="btn btn-primary download-button" id="image-download-button" href="#">Download compressed image</a>
+                <button class="btn btn-outline-secondary another-button" type="button" id="another-image-button">Compress another image</button>
+              </div>
+            </div>
+            <div class="error-panel" id="image-error-panel" role="alert" hidden>
+              <p class="error-title" id="image-error-title">We couldn’t compress this image.</p>
+              <p id="image-error-message"></p>
+              <div class="d-grid gap-2 d-sm-flex error-actions">
+                <button class="btn btn-primary" type="button" id="try-webp-button" hidden>Try WebP instead</button>
+                <button class="btn btn-outline-secondary another-button" type="button" id="retry-image-button">Choose another image</button>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <p class="privacy-note">Your files are stored temporarily and cleared when this app stops.</p>
+      </main>
+      <footer class="page-footer">A simple image tool from Toolsku</footer>
+    </div>
+    <script src="{{ request.url_for('assets', path='/js/images.js') }}" defer></script>
+  </body>
+</html>

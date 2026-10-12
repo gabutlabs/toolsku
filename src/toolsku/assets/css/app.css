@@ -92,6 +92,20 @@ body {
   font-size: 0.92rem;
 }
 
+.tools-link {
+  min-height: 2.75rem;
+  padding: 0.45rem 0.7rem;
+  color: var(--brand-hover);
+  border: 1px solid #a8b9ad;
+  border-radius: 0.55rem;
+  text-decoration: none;
+}
+
+.tools-link:hover {
+  color: var(--brand-hover);
+  background: var(--brand-soft);
+}
+
 .content-wrap {
   width: min(100%, 720px);
   margin: auto;
@@ -139,6 +153,86 @@ h1 {
   border: 1px solid #dbe4dd;
   border-radius: 1rem;
   box-shadow: 0 12px 34px rgb(29 54 39 / 5%);
+}
+
+.tools-home {
+  max-width: 760px;
+}
+
+.tool-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tool-choice {
+  min-height: 6.5rem;
+  padding: 1rem 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  text-decoration: none;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.tool-choice:hover {
+  color: var(--ink);
+  background: #f8faf8;
+  border-color: #8ba495;
+}
+
+.tool-choice:focus-visible {
+  outline: 3px solid #357f63;
+  outline-offset: 3px;
+}
+
+.tool-choice-icon {
+  flex: 0 0 3.2rem;
+  width: 3.2rem;
+  height: 3.2rem;
+  display: grid;
+  place-items: center;
+  color: var(--brand-hover);
+  background: var(--brand-soft);
+  border-radius: 0.7rem;
+}
+
+.tool-choice-icon-image {
+  color: #874118;
+  background: var(--warm-soft);
+}
+
+.tool-choice-icon svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.tool-choice-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.tool-choice-title {
+  font-size: 1rem;
+  font-weight: 720;
+}
+
+.tool-choice-description {
+  margin-top: 0.15rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.tool-choice-action {
+  flex: 0 0 auto;
+  color: var(--brand-hover);
+  font-size: 0.86rem;
+  font-weight: 700;
 }
 
 .section-heading {
@@ -296,6 +390,12 @@ h1 {
   font-weight: 800;
 }
 
+.image-file-icon {
+  color: var(--brand-hover);
+  background: var(--brand-soft);
+  border-color: #b5d1c0;
+}
+
 .selected-file-copy {
   min-width: 0;
   flex: 1 1 auto;
@@ -318,6 +418,7 @@ h1 {
 }
 
 .remove-file {
+  min-width: 4.25rem;
   min-height: 2.75rem;
   color: var(--muted);
   border: 1px solid #7e9385;
@@ -325,6 +426,23 @@ h1 {
 
 .target-heading {
   margin-top: 1.65rem;
+}
+
+.image-format-field {
+  max-width: 26rem;
+  margin-left: 2.5rem;
+}
+
+.image-format-field .form-label {
+  margin-bottom: 0.3rem;
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.image-format-field .form-select {
+  min-height: 2.75rem;
+  border-color: #7c9184;
 }
 
 .target-grid {
@@ -404,11 +522,57 @@ h1 {
   background: #f1f4f1;
 }
 
+.size-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+}
+
+.size-example {
+  padding: 0.4rem 0.55rem;
+  border: 1px solid #c5d1c8;
+  border-radius: 0.55rem;
+  color: var(--ink);
+  background: #fff;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.size-example span {
+  color: var(--muted);
+}
+
+.size-example:hover:not(:disabled) {
+  border-color: var(--brand);
+  background: #f4f7f4;
+}
+
+.size-example:focus-visible {
+  outline: 3px solid #357f63;
+  outline-offset: 2px;
+}
+
+.size-example:disabled {
+  color: var(--muted);
+  background: #f1f4f1;
+}
+
+.size-example-note {
+  margin-top: 0.45rem;
+}
+
 .form-text {
   display: block;
   margin-top: 0.25rem;
   color: var(--muted);
   font-size: 0.76rem;
+}
+
+.size-preview {
+  color: var(--ink);
+  font-weight: 600;
 }
 
 .compress-button,
@@ -649,10 +813,28 @@ h1 {
   .upload-area,
   .selected-file,
   .target-grid,
+  .image-format-field,
   .compress-button,
   .target-note,
   .job-panel {
     margin-left: 0;
+  }
+
+  .tool-choice {
+    min-height: 6rem;
+    padding: 0.85rem;
+    gap: 0.7rem;
+  }
+
+  .tool-choice-icon {
+    flex-basis: 2.8rem;
+    width: 2.8rem;
+    height: 2.8rem;
+  }
+
+  .tool-choice-action {
+    max-width: 5rem;
+    text-align: right;
   }
 
   .compress-button {
@@ -717,6 +899,15 @@ h1 {
 
   .upload-zone {
     flex-wrap: wrap;
+  }
+
+  .tool-choice {
+    flex-wrap: wrap;
+  }
+
+  .tool-choice-action {
+    margin-left: 3.5rem;
+    text-align: left;
   }
 
   .upload-button {

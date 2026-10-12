@@ -10,14 +10,20 @@ from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from toolsku.compression import CompressionError, compress_pdf
+from toolsku.compression import (
+    CompressionError,
+    ImageTooLargeError,
+    compress_image,
+    compress_pdf,
+    inspect_image,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -85,9 +91,12 @@ class CompressionJob:
     output_path: Path
     original_size: int
     target_mb: int | None
+    kind: Literal["pdf", "image"] = "pdf"
+    target_kb: int | None = None
     status: str = "queued"
     output_size: int | None = None
     target_met: bool | None = None
+    output_format: str = "pdf"
     message: str = "Waiting in the queue."
 
     def public_data(self) -> dict[str, object]:
@@ -95,13 +104,16 @@ class CompressionJob:
             "id": self.id,
             "status": self.status,
             "filename": self.filename,
+            "kind": self.kind,
             "original_size": self.original_size,
             "output_size": self.output_size,
             "target_mb": self.target_mb,
+            "target_kb": self.target_kb,
             "target_met": self.target_met,
+            "output_format": self.output_format,
             "message": self.message,
             "download_url": (
-                f"/api/jobs/{self.id}/download"
+                f"/api/{'image-jobs' if self.kind == 'image' else 'jobs'}/{self.id}/download"
                 if self.status == "completed" and self.output_path.is_file()
                 else None
             ),
@@ -117,45 +129,75 @@ async def process_queue(app: FastAPI) -> None:
         job = jobs.get(job_id)
         try:
             if job is None:
-                logger.warning("Queued PDF job %s was not found", job_id)
+                logger.warning("Queued file job %s was not found", job_id)
                 continue
 
             job.status = "processing"
-            job.message = "Compressing your PDF. This may take a little while."
-            target_bytes = job.target_mb * 1_000_000 if job.target_mb is not None else None
+            job.message = (
+                "Compressing your image. This may take a little while."
+                if job.kind == "image"
+                else "Compressing your PDF. This may take a little while."
+            )
+            if job.kind == "image":
+                target_bytes = job.target_kb * 1_000 if job.target_kb is not None else None
+                outcome = await asyncio.to_thread(
+                    compress_image,
+                    job.source_path,
+                    job.output_path,
+                    target_bytes,
+                    job.output_format,
+                )
+            else:
+                target_bytes = job.target_mb * 1_000_000 if job.target_mb is not None else None
+                outcome = await asyncio.to_thread(
+                    compress_pdf,
+                    job.source_path,
+                    job.output_path,
+                    target_bytes,
+                )
             logger.info(
-                "PDF compression started id=%s input_bytes=%s target_mb=%s",
+                "%s compression started id=%s input_bytes=%s target_bytes=%s",
+                job.kind,
                 job.id,
                 job.original_size,
-                job.target_mb,
-            )
-            outcome = await asyncio.to_thread(
-                compress_pdf,
-                job.source_path,
-                job.output_path,
                 target_bytes,
             )
             job.output_size = outcome.output_size
             job.target_met = outcome.target_met
+            job.output_format = outcome.output_format
             if outcome.target_met is False:
-                smallest_size_mb = (outcome.output_size + 9_999) // 10_000 / 100
-                job.message = (
-                    f"We couldn't reduce this PDF to {job.target_mb} MB or less. "
-                    f"The smallest result was {smallest_size_mb:.2f} MB. "
-                    "Try a larger target."
-                )
+                if job.kind == "image":
+                    if job.output_format == "png":
+                        job.message = (
+                            f"PNG’s lossless compression couldn’t reduce this image to {job.target_kb} KB. "
+                            "Try WebP for a smaller file, or JPEG for a photo. "
+                            "JPEG fills transparent areas with white."
+                        )
+                    else:
+                        job.message = (
+                            f"We couldn’t reduce this image to {job.target_kb} KB or less. "
+                            "Try a larger limit."
+                        )
+                else:
+                    smallest_size_mb = (outcome.output_size + 9_999) // 10_000 / 100
+                    job.message = (
+                        f"We couldn't reduce this PDF to {job.target_mb} MB or less. "
+                        f"The smallest result was {smallest_size_mb:.2f} MB. "
+                        "Try a larger target."
+                    )
                 job.status = "failed"
                 logger.warning(
-                    "PDF target not met id=%s output_bytes=%s target_mb=%s",
+                    "%s target not met id=%s output_bytes=%s",
+                    job.kind,
                     job.id,
                     job.output_size,
-                    job.target_mb,
                 )
             else:
                 job.message = outcome.message
                 job.status = "completed"
                 logger.info(
-                    "PDF compression completed id=%s output_bytes=%s target_met=%s",
+                    "%s compression completed id=%s output_bytes=%s target_met=%s",
+                    job.kind,
                     job.id,
                     job.output_size,
                     job.target_met,
@@ -164,12 +206,12 @@ async def process_queue(app: FastAPI) -> None:
             if job is not None:
                 job.status = "failed"
                 job.message = str(exc)
-            logger.warning("PDF compression failed id=%s reason=%s", job_id, exc)
+            logger.warning("File compression failed id=%s reason=%s", job_id, exc)
         except Exception:
-            logger.exception("PDF compression failed for job %s", job_id)
+            logger.exception("File compression failed for job %s", job_id)
             if job is not None:
                 job.status = "failed"
-                job.message = "Something went wrong while compressing this PDF. Try another file."
+                job.message = "Something went wrong while compressing this file. Try another one."
         finally:
             if job is not None:
                 job.source_path.unlink(missing_ok=True)
@@ -189,7 +231,7 @@ async def lifespan(app: FastAPI):
     file_handler = DailyFileHandler(LOGS_DIR)
     logger.addHandler(file_handler)
     logger.info("Application starting")
-    storage = tempfile.TemporaryDirectory(prefix="toolsku-pdf-")
+    storage = tempfile.TemporaryDirectory(prefix="toolsku-files-")
     app.state.storage_root = Path(storage.name)
     app.state.jobs = {}
     app.state.queue = asyncio.Queue(maxsize=MAX_WAITING_JOBS)
@@ -210,15 +252,24 @@ async def lifespan(app: FastAPI):
         file_handler.close()
 
 
-app = FastAPI(title="Toolsku PDF Compression", lifespan=lifespan)
+app = FastAPI(title="Toolsku File Compression", lifespan=lifespan)
 app.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
 templates = Jinja2Templates(directory=VIEWS_DIR)
 
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request) -> HTMLResponse:
-    logger.info("Home page rendered")
+    return templates.TemplateResponse(request=request, name="tools.html", context={})
+
+
+@app.get("/pdf", response_class=HTMLResponse)
+async def pdf_compressor(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(request=request, name="index.html", context={})
+
+
+@app.get("/images", response_class=HTMLResponse)
+async def image_compressor(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(request=request, name="images.html", context={})
 
 
 def _display_filename(filename: str | None) -> str:
@@ -245,6 +296,23 @@ def _parse_target(size_option: str, custom_size_mb: str | None) -> int | None:
         logger.warning("Compression request rejected reason=custom_size_below_minimum")
         raise HTTPException(status_code=422, detail="The target must be at least 1 MB.")
     return target_mb
+
+
+def _parse_image_target(size_option: str, custom_size_kb: str | None) -> int | None:
+    if size_option == "recommended":
+        return None
+    if size_option != "custom" or custom_size_kb is None or re.fullmatch(r"[0-9]+", custom_size_kb) is None:
+        raise HTTPException(status_code=422, detail="Enter a whole-number image size limit in KB.")
+    target_kb = int(custom_size_kb)
+    if target_kb < 10 or target_kb > MAX_UPLOAD_BYTES // 1_000:
+        raise HTTPException(status_code=422, detail="Choose a size limit from 10 to 50,000 KB.")
+    return target_kb
+
+
+def _parse_image_output_format(output_format: str) -> str:
+    if output_format not in {"source", "jpeg", "png", "webp"}:
+        raise HTTPException(status_code=422, detail="Choose JPEG, PNG, or WebP as the output format.")
+    return output_format
 
 
 @app.post("/api/jobs", status_code=202)
@@ -334,10 +402,108 @@ async def create_job(
     return job.public_data()
 
 
+@app.post("/api/image-jobs", status_code=202)
+async def create_image_job(
+    file: Annotated[UploadFile, File()],
+    size_option: Annotated[str, Form()] = "recommended",
+    custom_size_kb: Annotated[str | None, Form()] = None,
+    output_format: Annotated[str, Form()] = "source",
+) -> dict[str, object]:
+    target_kb = _parse_image_target(size_option, custom_size_kb)
+    requested_format = _parse_image_output_format(output_format)
+    filename = _display_filename(file.filename)
+    if Path(filename).suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"}:
+        await file.close()
+        raise HTTPException(status_code=415, detail="Choose a JPG, PNG, or WebP image.")
+
+    queue: asyncio.Queue[str] = app.state.queue
+    if queue.full():
+        await file.close()
+        raise HTTPException(
+            status_code=503,
+            detail="The compression queue is full. Wait a moment, then try again.",
+        )
+
+    job_id = uuid.uuid4().hex
+    directory = app.state.storage_root / job_id
+    source_path = directory / "source-image"
+    directory.mkdir()
+
+    try:
+        total_size = 0
+        with source_path.open("wb") as destination:
+            while chunk := await file.read(UPLOAD_CHUNK_BYTES):
+                total_size += len(chunk)
+                if total_size > MAX_UPLOAD_BYTES:
+                    raise HTTPException(status_code=413, detail="This image is larger than the 50 MB upload limit.")
+                destination.write(chunk)
+        if total_size == 0:
+            raise HTTPException(status_code=415, detail="Choose an image file to continue.")
+        image_format, width, height = inspect_image(source_path)
+        matching_extensions = {
+            "jpeg": {".jpg", ".jpeg"},
+            "png": {".png"},
+            "webp": {".webp"},
+        }
+        if Path(filename).suffix.lower() not in matching_extensions[image_format]:
+            raise HTTPException(status_code=415, detail="The file extension doesn’t match the image format.")
+    except ImageTooLargeError as exc:
+        shutil.rmtree(directory, ignore_errors=True)
+        raise HTTPException(status_code=413, detail=str(exc)) from exc
+    except CompressionError as exc:
+        shutil.rmtree(directory, ignore_errors=True)
+        raise HTTPException(status_code=415, detail=str(exc)) from exc
+    except HTTPException:
+        shutil.rmtree(directory, ignore_errors=True)
+        raise
+    except Exception:
+        logger.exception("Image upload failed id=%s", job_id)
+        shutil.rmtree(directory, ignore_errors=True)
+        raise
+    finally:
+        await file.close()
+
+    resolved_format = image_format if requested_format == "source" else requested_format
+    output_suffix = {"jpeg": ".jpg", "png": ".png", "webp": ".webp"}[resolved_format]
+    output_path = directory / f"compressed{output_suffix}"
+    job = CompressionJob(
+        id=job_id,
+        filename=filename,
+        directory=directory,
+        source_path=source_path,
+        output_path=output_path,
+        original_size=total_size,
+        kind="image",
+        target_mb=None,
+        target_kb=target_kb,
+        output_format=resolved_format,
+        message=f"Image dimensions: {width} × {height} pixels.",
+    )
+    try:
+        queue.put_nowait(job_id)
+    except asyncio.QueueFull as exc:
+        shutil.rmtree(directory, ignore_errors=True)
+        raise HTTPException(
+            status_code=503,
+            detail="The compression queue is full. Wait a moment, then try again.",
+        ) from exc
+    app.state.jobs[job_id] = job
+    logger.info(
+        "Image upload accepted id=%s input_bytes=%s dimensions=%sx%s target_kb=%s output_format=%s",
+        job.id,
+        job.original_size,
+        width,
+        height,
+        target_kb,
+        resolved_format,
+    )
+    return job.public_data()
+
+
 @app.get("/api/jobs/{job_id}")
 async def get_job(job_id: str) -> dict[str, object]:
     job = app.state.jobs.get(job_id)
-    if job is None:
+    if job is None or job.kind != "pdf":
         logger.warning("PDF job lookup failed id=%s reason=not_found", job_id)
         raise HTTPException(status_code=404, detail="This compression job could not be found.")
     logger.info("PDF job status checked id=%s status=%s", job.id, job.status)
@@ -347,7 +513,7 @@ async def get_job(job_id: str) -> dict[str, object]:
 @app.get("/api/jobs/{job_id}/download")
 async def download_job(job_id: str) -> FileResponse:
     job = app.state.jobs.get(job_id)
-    if job is None or job.status != "completed" or not job.output_path.is_file():
+    if job is None or job.kind != "pdf" or job.status != "completed" or not job.output_path.is_file():
         logger.warning("PDF download rejected id=%s reason=unavailable", job_id)
         raise HTTPException(status_code=404, detail="This compressed PDF is no longer available.")
     stem = Path(job.filename).stem or "document"
@@ -356,5 +522,30 @@ async def download_job(job_id: str) -> FileResponse:
         path=job.output_path,
         media_type="application/pdf",
         filename=f"compressed-{stem}.pdf",
+        headers={"X-Content-Type-Options": "nosniff"},
+    )
+
+
+@app.get("/api/image-jobs/{job_id}")
+async def get_image_job(job_id: str) -> dict[str, object]:
+    job = app.state.jobs.get(job_id)
+    if job is None or job.kind != "image":
+        raise HTTPException(status_code=404, detail="This image compression job could not be found.")
+    return job.public_data()
+
+
+@app.get("/api/image-jobs/{job_id}/download")
+async def download_image_job(job_id: str) -> FileResponse:
+    job = app.state.jobs.get(job_id)
+    if job is None or job.kind != "image" or job.status != "completed" or not job.output_path.is_file():
+        raise HTTPException(status_code=404, detail="This compressed image is no longer available.")
+    suffixes = {"jpeg": ".jpg", "png": ".png", "webp": ".webp"}
+    media_types = {"jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp"}
+    output_format = job.output_format
+    stem = Path(job.filename).stem or "image"
+    return FileResponse(
+        path=job.output_path,
+        media_type=media_types[output_format],
+        filename=f"compressed-{stem}{suffixes[output_format]}",
         headers={"X-Content-Type-Options": "nosniff"},
     )
